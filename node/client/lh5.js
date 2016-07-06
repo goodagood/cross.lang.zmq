@@ -6,6 +6,8 @@
 var u = require("underscore");
 var zmq = require('zmq');
 
+
+var ADDR = "tcp://localhost:5555";
 var p = console.log;
 
 
@@ -22,15 +24,18 @@ var p = console.log;
 function  ask(info, callback){
     var requester = zmq.socket('req');
 
+    //## Set time out if specified
     var timeout_mark = null;
     if(u.isNumber(info.timeout)){
-        p('set time out to ', info.timeout);
+        //p('set time out to ', info.timeout);
         timeout_mark = setTimeout(function(){
             p('time out');
             requester.close();
         }, info.timeout);
     }
 
+
+    //## On 'message' event, callback with json contains output, and close.
     requester.on("message", function(reply) {
         if(timeout_mark) clearTimeout(timeout_mark);
         try{
@@ -40,9 +45,12 @@ function  ask(info, callback){
             callback(err);
         }
 
+        requester.close();
     });
 
-    requester.connect("tcp://localhost:5555");
+    //## connect and send the info, which should be 'input'
+    //requester.connect("tcp://localhost:5555");
+    requester.connect(ADDR);
 
     try{
         var strdata = JSON.stringify(info);
@@ -56,35 +64,39 @@ module.exports.ask = ask;
 
 
 
-process.on('SIGINT', function() {
-    p('SIGINT');
-    process.exit();
-});
-
-
-
-function check_0410(){
-    ask({"ask-for": 'what.4:34', path:'tmp/public', timeout:3000}, function(err, rep){
-        p(err, rep);
-    });
-}
-function check_0526(){
-    ask(JSON.stringify({
-        "who": 'any one',
-        "ask-for": 'two_n_two',
-        "path":'tmp/public',
-        "timeout":3000
-    }),
-    function(err, rep){
-        p('any?');
-        p(err, rep);
-    });
-}
 
 if(require.main === module){
+
+    process.on('SIGINT', function() {
+        p('SIGINT');
+        process.exit();
+    });
+
+
+
+    function check_0410(){
+        ask({"ask-for": 'what.4:34', path:'tmp/public', timeout:3000}, function(err, rep){
+            p(err, rep);
+        });
+    }
+    function check_0526(){
+        ask(JSON.stringify({
+            "who": 'any one',
+            "ask-for": 'two_n_two',
+            "path":'tmp/public',
+            "timeout":3000
+        }),
+        function(err, rep){
+            p('any?');
+            p(err, rep);
+        });
+    }
+
+
     function check_0701(){
         ask({"ask4": 'foo_a', path:'tmp/public', timeout:3000}, function(err, rep){
-            p(err, rep);
+            err ? p(err) : p(rep);
+            p(typeof(rep)); p(Object.keys(rep));
             process.exit();
         });
     }

@@ -38,15 +38,15 @@ Path_of_Workers = './workers'
 
 
 
-def wait_zmq_input():
+def cycle_output_for_zmq_input():
     '''
-    Work as server, waiting the input, reply output.
+    Works as server, waiting the input, gives output.
 
-    The input is {'ask4': module_name, ...}
+    The input is {'ask4': module_name, other parameters ...}
     and reply is {input:, output:}, the input is copied as referrence.
 
-    The module_name should contain 'main',
-    module_name.main(input) #=> reply contains output
+    The module_name will get import-ed, and
+    module_name.main(input) #=> should return the output
 
     '''
     context = zmq.Context()
@@ -162,5 +162,5 @@ def noop_service(info):
 
 
 if __name__ == "__main__":
-    wait_zmq_input()
+    cycle_output_for_zmq_input()
 
